@@ -1,8 +1,9 @@
 -- =========================================================
--- Guy Finance — initial schema (source of truth; already applied to prod)
+-- Guy Finance — initial schema
 -- All tables scoped per-user via RLS (auth.uid() = user_id)
 -- =========================================================
 
+-- ---------- profiles ----------
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
@@ -20,6 +21,7 @@ create policy "profiles_select_own" on public.profiles for select using (auth.ui
 create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id);
 create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid() = id);
 
+-- auto-create profile row on signup
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -35,6 +37,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
+-- ---------- categories ----------
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -49,6 +52,7 @@ alter table public.categories enable row level security;
 create policy "categories_all_own" on public.categories for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create index if not exists categories_user_idx on public.categories(user_id);
 
+-- ---------- transactions (income / expense / savings ledger) ----------
 create table if not exists public.transactions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -72,6 +76,7 @@ create policy "transactions_all_own" on public.transactions for all using (auth.
 create index if not exists transactions_user_date_idx on public.transactions(user_id, occurred_on desc);
 create index if not exists transactions_user_category_idx on public.transactions(user_id, category_id);
 
+-- ---------- subscriptions ----------
 create table if not exists public.subscriptions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -87,6 +92,7 @@ create table if not exists public.subscriptions (
 alter table public.subscriptions enable row level security;
 create policy "subscriptions_all_own" on public.subscriptions for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ---------- trading accounts (Prop firms etc.) ----------
 create table if not exists public.trading_accounts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -101,6 +107,7 @@ create table if not exists public.trading_accounts (
 alter table public.trading_accounts enable row level security;
 create policy "trading_accounts_all_own" on public.trading_accounts for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ---------- trading payouts ----------
 create table if not exists public.trading_payouts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -114,6 +121,7 @@ create table if not exists public.trading_payouts (
 alter table public.trading_payouts enable row level security;
 create policy "trading_payouts_all_own" on public.trading_payouts for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ---------- savings goals ----------
 create table if not exists public.goals (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -128,6 +136,7 @@ create table if not exists public.goals (
 alter table public.goals enable row level security;
 create policy "goals_all_own" on public.goals for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ---------- investments ----------
 create table if not exists public.investments (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -142,6 +151,7 @@ create table if not exists public.investments (
 alter table public.investments enable row level security;
 create policy "investments_all_own" on public.investments for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ---------- recurring payments (drives auto-generated transactions + reminders) ----------
 create table if not exists public.recurring_payments (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -156,6 +166,7 @@ create table if not exists public.recurring_payments (
 alter table public.recurring_payments enable row level security;
 create policy "recurring_payments_all_own" on public.recurring_payments for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ---------- notifications ----------
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -168,6 +179,7 @@ create table if not exists public.notifications (
 alter table public.notifications enable row level security;
 create policy "notifications_all_own" on public.notifications for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ---------- receipts (upload + OCR-ready) ----------
 create table if not exists public.receipts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -183,6 +195,7 @@ create table if not exists public.receipts (
 alter table public.receipts enable row level security;
 create policy "receipts_all_own" on public.receipts for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ---------- storage bucket for receipts ----------
 insert into storage.buckets (id, name, public)
 values ('receipts', 'receipts', false)
 on conflict (id) do nothing;
@@ -194,6 +207,7 @@ create policy "receipts_storage_own_insert" on storage.objects for insert
 create policy "receipts_storage_own_delete" on storage.objects for delete
   using (bucket_id = 'receipts' and (storage.foldername(name))[1] = auth.uid()::text);
 
+-- ---------- per-category monthly budgets ----------
 create table if not exists public.budgets (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
