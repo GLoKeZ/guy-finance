@@ -1,5 +1,6 @@
 import { getOrCreateProfile } from "@/lib/actions/profile";
 import { getNotifications } from "@/lib/actions/notifications";
+import { ensureDefaultCategories } from "@/lib/actions/helpers";
 import { Sidebar } from "@/components/app-shell/sidebar";
 import { BottomNav } from "@/components/app-shell/bottom-nav";
 import { Topbar } from "@/components/app-shell/topbar";
@@ -7,7 +8,11 @@ import { MonthPicker } from "@/components/app-shell/month-picker";
 import { MonthProvider } from "@/lib/month-context";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const [profile, notifications] = await Promise.all([getOrCreateProfile(), getNotifications()]);
+  const [profile, notifications] = await Promise.all([
+    getOrCreateProfile(),
+    getNotifications(),
+    ensureDefaultCategories(),
+  ]);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
