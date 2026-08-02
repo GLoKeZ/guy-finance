@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Download, LogOut, Plus, Trash2 } from "lucide-react";
+import { Download, LogOut, Plus, Trash2, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getOrCreateProfile, updateProfile } from "@/lib/actions/profile";
 import { getCategories } from "@/lib/actions/categories";
@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -50,8 +49,11 @@ export default function SettingsPage() {
         monthly_salary: profile.monthly_salary,
         salary_day: profile.salary_day,
         monthly_savings_target: profile.monthly_savings_target,
+        investment_target: profile.investment_target,
+        max_spending: profile.max_spending,
+        emergency_fund_target: profile.emergency_fund_target,
       });
-      toast.success("Profile updated");
+      toast.success("הפרופיל עודכן");
     } finally {
       setSaving(false);
     }
@@ -69,7 +71,7 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await Promise.all(budgets.map((b) => setBudget(b.category_id, b.monthly_amount)));
-      toast.success("Budgets saved");
+      toast.success("התקציב נשמר");
     } finally {
       setSaving(false);
     }
@@ -77,17 +79,17 @@ export default function SettingsPage() {
 
   async function handleExportCsv() {
     const txs = await getTransactions({ limit: 5000 });
-    const headers = ["Date", "Type", "Description", "Category", "Amount", "Currency", "Payment Method", "Note"];
+    const headers = ["תאריך", "סוג", "תיאור", "קטגוריה", "סכום", "מטבע", "אמצעי תשלום", "הערה"];
     const rows = txs.map((t) => [t.occurred_on, t.type, t.description, t.category?.name ?? "", t.amount, t.currency, t.payment_method ?? "", t.note ?? ""]);
     const csv = [headers, ...rows].map((r) => r.map((f) => `"${String(f).replace(/"/g, '""')}"`).join(",")).join("\r\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `guy-finance-transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `עסקאות-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Exported");
+    toast.success("יוצא בהצלחה");
   }
 
   async function handleSignOut() {
@@ -107,36 +109,50 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Settings" subtitle="Your profile, budgets, and data" />
+      <PageHeader title="הגדרות" subtitle="הפרופיל, היעדים והנתונים שלך" />
 
       <Card>
-        <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
+        <CardHeader><CardTitle>פרופיל</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Full name</Label><Input value={profile.full_name ?? ""} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>שם מלא</Label><Input value={profile.full_name ?? ""} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} /></div>
             <div className="space-y-1.5">
-              <Label>Currency</Label>
+              <Label>מטבע</Label>
               <Select value={profile.currency} onValueChange={(v) => setProfile({ ...profile, currency: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ILS">ILS (₪)</SelectItem>
-                  <SelectItem value="USD">USD ($)</SelectItem>
-                  <SelectItem value="EUR">EUR (€)</SelectItem>
+                  <SelectItem value="ILS">שקל (₪)</SelectItem>
+                  <SelectItem value="USD">דולר ($)</SelectItem>
+                  <SelectItem value="EUR">יורו (€)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5"><Label>Monthly salary</Label><Input type="number" value={profile.monthly_salary} onChange={(e) => setProfile({ ...profile, monthly_salary: Number(e.target.value) })} /></div>
-            <div className="space-y-1.5"><Label>Salary day</Label><Input type="number" min={1} max={31} value={profile.salary_day} onChange={(e) => setProfile({ ...profile, salary_day: Number(e.target.value) })} /></div>
-            <div className="space-y-1.5"><Label>Savings target</Label><Input type="number" value={profile.monthly_savings_target} onChange={(e) => setProfile({ ...profile, monthly_savings_target: Number(e.target.value) })} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5"><Label>משכורת חודשית</Label><Input type="number" value={profile.monthly_salary} onChange={(e) => setProfile({ ...profile, monthly_salary: Number(e.target.value) })} /></div>
+            <div className="space-y-1.5"><Label>יום קבלת משכורת</Label><Input type="number" min={1} max={31} value={profile.salary_day} onChange={(e) => setProfile({ ...profile, salary_day: Number(e.target.value) })} /></div>
           </div>
-          <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Save profile</Button>
+          <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">{saving && <Loader2 className="h-4 w-4 animate-spin" />}שמור פרופיל</Button>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Monthly budgets by category</CardTitle></CardHeader>
+        <CardHeader><CardTitle>יעדים אישיים</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5"><Label>יעד חיסכון חודשי</Label><Input type="number" value={profile.monthly_savings_target} onChange={(e) => setProfile({ ...profile, monthly_savings_target: Number(e.target.value) })} /></div>
+            <div className="space-y-1.5"><Label>יעד השקעה</Label><Input type="number" value={profile.investment_target} onChange={(e) => setProfile({ ...profile, investment_target: Number(e.target.value) })} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5"><Label>תקרת הוצאות חודשית</Label><Input type="number" value={profile.max_spending} onChange={(e) => setProfile({ ...profile, max_spending: Number(e.target.value) })} /></div>
+            <div className="space-y-1.5"><Label>יעד קרן חירום</Label><Input type="number" value={profile.emergency_fund_target} onChange={(e) => setProfile({ ...profile, emergency_fund_target: Number(e.target.value) })} /></div>
+          </div>
+          <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">{saving && <Loader2 className="h-4 w-4 animate-spin" />}שמור יעדים</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>תקציב חודשי לפי קטגוריה</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {categories.filter((c) => c.kind !== "income").map((c) => {
             const b = budgets.find((b) => b.category_id === c.id);
@@ -147,17 +163,17 @@ export default function SettingsPage() {
               </div>
             );
           })}
-          <Button onClick={handleSaveBudgets} disabled={saving} className="mt-2 gap-2">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Save budgets</Button>
+          <Button onClick={handleSaveBudgets} disabled={saving} className="mt-2 gap-2">{saving && <Loader2 className="h-4 w-4 animate-spin" />}שמור תקציב</Button>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Recurring payments</CardTitle></CardHeader>
+        <CardHeader><CardTitle>הוראות קבע</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          {recurring.length === 0 && <p className="text-sm text-muted-foreground">No recurring payments configured.</p>}
+          {recurring.length === 0 && <p className="text-sm text-muted-foreground">אין הוראות קבע מוגדרות.</p>}
           {recurring.map((r) => (
             <div key={r.id} className="flex items-center justify-between rounded-lg border border-border p-2.5">
-              <span className="text-sm">{r.name} · {r.frequency}</span>
+              <span className="text-sm">{r.name} · {r.frequency === "monthly" ? "חודשי" : r.frequency === "weekly" ? "שבועי" : "שנתי"}</span>
               <div className="flex items-center gap-2">
                 <span className="font-tabular text-sm">{r.amount}</span>
                 <button onClick={async () => { await deleteRecurringPayment(r.id); load(); }} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -169,10 +185,10 @@ export default function SettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Data</CardTitle></CardHeader>
+        <CardHeader><CardTitle>נתונים</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={handleExportCsv} className="gap-2"><Download className="h-4 w-4" /> Export CSV</Button>
-          <Button variant="destructive" onClick={handleSignOut} className="gap-2"><LogOut className="h-4 w-4" /> Sign out</Button>
+          <Button variant="outline" onClick={handleExportCsv} className="gap-2"><Download className="h-4 w-4" /> ייצוא ל-CSV</Button>
+          <Button variant="destructive" onClick={handleSignOut} className="gap-2"><LogOut className="h-4 w-4" /> התנתקות</Button>
         </CardContent>
       </Card>
     </div>
@@ -188,43 +204,43 @@ function RecurringForm({ categories, onAdded }: { categories: Category[]; onAdde
   const [saving, setSaving] = useState(false);
 
   async function submit() {
-    if (!name || !categoryId) { toast.error("Fill in name and category"); return; }
+    if (!name || !categoryId) { toast.error("יש למלא שם וקטגוריה"); return; }
     setSaving(true);
     try {
       await createRecurringPayment({ name, amount, frequency, category_id: categoryId, next_due_date: new Date().toISOString().slice(0, 10) });
       setName(""); setAmount(0); setOpen(false);
       onAdded();
-      toast.success("Added");
+      toast.success("נוסף בהצלחה");
     } finally {
       setSaving(false);
     }
   }
 
-  if (!open) return <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}><Plus className="h-3.5 w-3.5" /> Add recurring payment</Button>;
+  if (!open) return <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}><Plus className="h-3.5 w-3.5" /> הוספת הוראת קבע</Button>;
 
   return (
     <div className="space-y-2 rounded-lg border border-border p-3">
       <div className="grid grid-cols-2 gap-2">
-        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input type="number" placeholder="Amount" value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
+        <Input placeholder="שם" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input type="number" placeholder="סכום" value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Select value={categoryId} onValueChange={setCategoryId}>
-          <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="קטגוריה" /></SelectTrigger>
           <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}</SelectContent>
         </Select>
         <Select value={frequency} onValueChange={(v) => setFrequency(v as typeof frequency)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="weekly">Weekly</SelectItem>
-            <SelectItem value="monthly">Monthly</SelectItem>
-            <SelectItem value="yearly">Yearly</SelectItem>
+            <SelectItem value="weekly">שבועי</SelectItem>
+            <SelectItem value="monthly">חודשי</SelectItem>
+            <SelectItem value="yearly">שנתי</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="flex gap-2">
-        <Button size="sm" onClick={submit} disabled={saving} className="gap-1.5">{saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}Save</Button>
-        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button size="sm" onClick={submit} disabled={saving} className="gap-1.5">{saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}שמור</Button>
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>ביטול</Button>
       </div>
     </div>
   );
