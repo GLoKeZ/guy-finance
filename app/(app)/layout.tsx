@@ -17,12 +17,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <MonthProvider>
-      <div className="min-h-screen bg-background">
+      <div className="flex h-[100dvh] flex-col overflow-hidden bg-background md:block md:h-auto md:min-h-screen md:overflow-visible">
         <Sidebar />
         <Topbar fullName={profile.full_name} avatarUrl={profile.avatar_url} unreadCount={unreadCount}>
           <MonthPicker />
         </Topbar>
-        <main className="mx-auto max-w-5xl px-4 pb-24 pt-5 md:mr-60 md:ml-0 md:max-w-none md:px-8 md:pb-10">
+        <main className="mx-auto w-full max-w-5xl flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(100px+env(safe-area-inset-bottom))] pt-5 md:mr-60 md:ml-0 md:max-w-none md:flex-none md:overflow-visible md:px-8 md:pb-10">
           {children}
         </main>
         <BottomNav />
