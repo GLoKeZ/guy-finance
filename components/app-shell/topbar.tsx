@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle";
+import { SyncStatus } from "./sync-status";
 import Link from "next/link";
 
 export function Topbar({
@@ -42,7 +43,8 @@ export function Topbar({
     <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur-lg md:mr-60">
       <div className="flex h-14 items-center justify-between gap-3 px-4">
         <div className="min-w-0 flex-1">{children}</div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <SyncStatus />
           <ThemeToggle />
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-4 w-4" />
@@ -56,21 +58,21 @@ export function Topbar({
             <DropdownMenuTrigger asChild>
               <button className="ml-1">
                 <Avatar className="h-8 w-8">
-                  {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName ?? "User"} />}
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName ?? "משתמש"} />}
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{fullName || "My Account"}</DropdownMenuLabel>
+              <DropdownMenuLabel>{fullName || "החשבון שלי"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/settings" className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" /> Settings
+                  <Settings className="h-4 w-4" /> הגדרות
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={signOut} className="flex items-center gap-2 text-destructive">
-                <LogOut className="h-4 w-4" /> Sign out
+                <LogOut className="h-4 w-4" /> התנתקות
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

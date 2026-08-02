@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getOrCreateProfile, updateProfile } from "@/lib/actions/profile";
 import { getCategories } from "@/lib/actions/categories";
 import { getBudgets, setBudget } from "@/lib/actions/budgets";
+import { useRealtimeSync } from "@/lib/use-realtime-sync";
 import { getTransactions } from "@/lib/actions/transactions";
 import { getRecurringPayments, createRecurringPayment, deleteRecurringPayment } from "@/lib/actions/recurring";
 import type { Profile, Category, Budget, RecurringPayment } from "@/lib/types";
@@ -38,6 +39,7 @@ export default function SettingsPage() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeSync("budgets", load);
 
   async function handleSaveProfile() {
     if (!profile) return;
