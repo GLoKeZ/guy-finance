@@ -13,6 +13,7 @@ import type { TradingAccount, TradingPayout, TradingStatus } from "@/lib/types";
 import { formatDate, formatMoney, formatPercent } from "@/lib/utils";
 import { sumBy } from "@/lib/finance-calc";
 import { useMonth } from "@/lib/month-context";
+import { useRealtimeSync } from "@/lib/use-realtime-sync";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { TrendSparkline } from "@/components/charts/trend-sparkline";
@@ -58,6 +59,8 @@ export default function TradingPage() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeSync("trading_accounts", load);
+  useRealtimeSync("trading_payouts", load);
 
   const monthAccounts = accounts.filter((a) => a.purchase_date.slice(0, 7) === month);
   const monthPayouts = payouts.filter((p) => p.paid_on.slice(0, 7) === month);

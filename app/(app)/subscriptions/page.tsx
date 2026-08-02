@@ -7,6 +7,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getSubscriptions, createSubscription, updateSubscription, deleteSubscription } from "@/lib/actions/subscriptions";
+import { useRealtimeSync } from "@/lib/use-realtime-sync";
 import { getCategories } from "@/lib/actions/categories";
 import type { Subscription, Category, EssentialLevel } from "@/lib/types";
 import { formatMoney } from "@/lib/utils";
@@ -50,6 +51,7 @@ export default function SubscriptionsPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useRealtimeSync("subscriptions", load);
 
   const active = subs.filter((s) => s.active);
   const monthlyTotal = sumBy(active, (s) => s.amount);
