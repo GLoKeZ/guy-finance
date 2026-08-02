@@ -23,14 +23,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const schema = z.object({
-  name: z.string().min(1, "Required"),
-  category_id: z.string().min(1, "Required"),
-  amount: z.coerce.number().positive("Enter a valid amount"),
+  name: z.string().min(1, "שדה חובה"),
+  category_id: z.string().min(1, "שדה חובה"),
+  amount: z.coerce.number().positive("יש להזין סכום תקין"),
   billing_day: z.coerce.number().min(1).max(31),
   essential_level: z.enum(["essential", "non_essential", "review"]),
   note: z.string().optional(),
 });
 type FormValues = z.infer<typeof schema>;
+
+const LEVEL_LABEL: Record<string, string> = { essential: "חיוני", non_essential: "לא חיוני", review: "לבדיקה" };
 
 export default function SubscriptionsPage() {
   const [subs, setSubs] = useState<Subscription[]>([]);
@@ -60,29 +62,29 @@ export default function SubscriptionsPage() {
 
   async function handleDelete(id: string) {
     await deleteSubscription(id);
-    toast.success("Deleted");
+    toast.success("נמחק");
     load();
   }
 
   return (
     <div>
       <PageHeader
-        title="Subscriptions"
-        subtitle="Every recurring charge in one place"
-        action={<Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2"><Plus className="h-4 w-4" /> Add</Button>}
+        title="מנויים"
+        subtitle="כל החיוב החוזר במקום אחד"
+        action={<Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2"><Plus className="h-4 w-4" /> הוספה</Button>}
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Active monthly cost</div><div className="mt-1 font-tabular text-lg font-bold text-accent">{formatMoney(monthlyTotal)}</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Yearly cost</div><div className="mt-1 font-tabular text-lg font-bold">{formatMoney(monthlyTotal * 12)}</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Active subs</div><div className="mt-1 font-tabular text-lg font-bold">{active.length}</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Non-essential</div><div className="mt-1 font-tabular text-lg font-bold text-warning">{formatMoney(nonEssential)}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">עלות חודשית פעילה</div><div className="mt-1 font-tabular text-lg font-bold text-accent">{formatMoney(monthlyTotal)}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">עלות שנתית</div><div className="mt-1 font-tabular text-lg font-bold">{formatMoney(monthlyTotal * 12)}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">מנויים פעילים</div><div className="mt-1 font-tabular text-lg font-bold">{active.length}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">לא חיוני</div><div className="mt-1 font-tabular text-lg font-bold text-warning">{formatMoney(nonEssential)}</div></CardContent></Card>
       </div>
 
       {loading ? (
         <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
       ) : subs.length === 0 ? (
-        <EmptyState icon="🔁" title="No subscriptions yet" />
+        <EmptyState icon="🔁" title="אין מנויים עדיין" />
       ) : (
         <div className="space-y-2">
           <AnimatePresence initial={false}>
@@ -92,12 +94,12 @@ export default function SubscriptionsPage() {
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-base">{s.category?.icon ?? "🔁"}</div>
                   <div>
                     <div className="text-sm font-medium">{s.name}</div>
-                    <div className="text-[11px] text-muted-foreground">{s.category?.name} · Bills on day {s.billing_day}</div>
+                    <div className="text-[11px] text-muted-foreground">{s.category?.name} · חיוב ביום {s.billing_day}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge variant={s.essential_level === "essential" ? "default" : s.essential_level === "non_essential" ? "destructive" : "warning"}>
-                    {s.essential_level.replace("_", "-")}
+                    {LEVEL_LABEL[s.essential_level]}
                   </Badge>
                   <span className="font-tabular text-sm font-semibold">{formatMoney(s.amount)}</span>
                   <Switch checked={s.active} onCheckedChange={() => toggleActive(s)} />
@@ -129,12 +131,12 @@ function SubscriptionForm({ open, onOpenChange, categories, editing, onSaved }: 
     try {
       if (editing) await updateSubscription(editing.id, values);
       else await createSubscription(values);
-      toast.success(editing ? "Updated" : "Subscription added");
+      toast.success(editing ? "עודכן" : "המנוי נוסף");
       reset();
       onSaved();
       onOpenChange(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed");
+      toast.error(e instanceof Error ? e.message : "נכשל");
     } finally {
       setSaving(false);
     }
@@ -143,38 +145,38 @@ function SubscriptionForm({ open, onOpenChange, categories, editing, onSaved }: 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="sm:mx-auto sm:max-w-md sm:rounded-2xl">
-        <SheetHeader><SheetTitle>{editing ? "Edit subscription" : "Add subscription"}</SheetTitle></SheetHeader>
+        <SheetHeader><SheetTitle>{editing ? "עריכת מנוי" : "הוספת מנוי"}</SheetTitle></SheetHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-4">
-          <div className="space-y-1.5"><Label>Name</Label><Input {...register("name")} placeholder="Netflix, Bookmap..." />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
+          <div className="space-y-1.5"><Label>שם</Label><Input {...register("name")} placeholder="Netflix, Bookmap..." />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
           <div className="space-y-1.5">
-            <Label>Category</Label>
+            <Label>קטגוריה</Label>
             <Controller control={control} name="category_id" render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="בחר" /></SelectTrigger>
                 <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}</SelectContent>
               </Select>
             )} />
             {errors.category_id && <p className="text-xs text-destructive">{errors.category_id.message}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Monthly cost</Label><Input type="number" step="0.01" {...register("amount")} /></div>
-            <div className="space-y-1.5"><Label>Billing day</Label><Input type="number" min={1} max={31} {...register("billing_day")} /></div>
+            <div className="space-y-1.5"><Label>עלות חודשית</Label><Input type="number" step="0.01" {...register("amount")} /></div>
+            <div className="space-y-1.5"><Label>יום חיוב</Label><Input type="number" min={1} max={31} {...register("billing_day")} /></div>
           </div>
           <div className="space-y-1.5">
-            <Label>Status</Label>
+            <Label>סטטוס</Label>
             <Controller control={control} name="essential_level" render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="essential">Essential</SelectItem>
-                  <SelectItem value="non_essential">Non-essential</SelectItem>
-                  <SelectItem value="review">Needs review</SelectItem>
+                  <SelectItem value="essential">חיוני</SelectItem>
+                  <SelectItem value="non_essential">לא חיוני</SelectItem>
+                  <SelectItem value="review">לבדיקה</SelectItem>
                 </SelectContent>
               </Select>
             )} />
           </div>
-          <div className="space-y-1.5"><Label>Note</Label><Input {...register("note")} /></div>
-          <Button type="submit" size="lg" className="w-full gap-2" disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />}Save</Button>
+          <div className="space-y-1.5"><Label>הערה</Label><Input {...register("note")} /></div>
+          <Button type="submit" size="lg" className="w-full gap-2" disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />}שמור</Button>
         </form>
       </SheetContent>
     </Sheet>

@@ -16,16 +16,17 @@ import { Loader2 } from "lucide-react";
 
 const schema = z.object({
   type: z.enum(["expense", "income", "savings"]),
-  amount: z.coerce.number().positive("Enter a valid amount"),
-  category_id: z.string().min(1, "Pick a category"),
-  description: z.string().min(1, "Required"),
+  amount: z.coerce.number().positive("יש להזין סכום תקין"),
+  category_id: z.string().min(1, "יש לבחור קטגוריה"),
+  description: z.string().min(1, "שדה חובה"),
   occurred_on: z.string().min(1),
   payment_method: z.string().optional(),
   note: z.string().optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
-const PAYMENT_METHODS = ["Credit Card", "Bit", "Bank Transfer", "Cash", "Apple Pay", "Other"];
+const PAYMENT_METHODS = ["אשראי", "ביט", "העברה בנקאית", "מזומן", "Apple Pay", "אחר"];
+const TYPE_LABEL: Record<string, string> = { expense: "הוצאה", income: "הכנסה", savings: "חיסכון" };
 
 export function TransactionForm({
   open,
@@ -57,7 +58,7 @@ export function TransactionForm({
           category_id: editing.category_id ?? "",
           description: editing.description,
           occurred_on: editing.occurred_on,
-          payment_method: editing.payment_method ?? "Credit Card",
+          payment_method: editing.payment_method ?? "אשראי",
           note: editing.note ?? "",
         }
       : {
@@ -66,7 +67,7 @@ export function TransactionForm({
           category_id: "",
           description: "",
           occurred_on: new Date().toISOString().slice(0, 10),
-          payment_method: "Credit Card",
+          payment_method: "אשראי",
           note: "",
         },
   });
@@ -79,16 +80,16 @@ export function TransactionForm({
     try {
       if (editing) {
         await updateTransaction(editing.id, { ...values, type: values.type as TxType });
-        toast.success("Transaction updated");
+        toast.success("העסקה עודכנה");
       } else {
         await createTransaction({ ...values, type: values.type as TxType });
-        toast.success("Transaction added");
+        toast.success("העסקה נוספה");
       }
       reset();
       onSaved();
       onOpenChange(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Something went wrong");
+      toast.error(e instanceof Error ? e.message : "משהו השתבש");
     } finally {
       setSaving(false);
     }
@@ -98,7 +99,7 @@ export function TransactionForm({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="sm:mx-auto sm:max-w-md sm:rounded-2xl">
         <SheetHeader>
-          <SheetTitle>{editing ? "Edit transaction" : "Add transaction"}</SheetTitle>
+          <SheetTitle>{editing ? "עריכת עסקה" : "הוספת עסקה"}</SheetTitle>
         </SheetHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-4">
@@ -113,7 +114,7 @@ export function TransactionForm({
                     type="button"
                     whileTap={{ scale: 0.96 }}
                     onClick={() => field.onChange(t)}
-                    className={`rounded-lg border py-2.5 text-sm font-medium capitalize transition-colors ${
+                    className={`rounded-lg border py-2.5 text-sm font-medium transition-colors ${
                       field.value === t
                         ? t === "expense"
                           ? "border-destructive bg-destructive/10 text-destructive"
@@ -123,7 +124,7 @@ export function TransactionForm({
                         : "border-input text-muted-foreground"
                     }`}
                   >
-                    {t}
+                    {TYPE_LABEL[t]}
                   </motion.button>
                 ))}
               </div>
@@ -132,31 +133,31 @@ export function TransactionForm({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Amount</Label>
+              <Label>סכום</Label>
               <Input type="number" step="0.01" inputMode="decimal" {...register("amount")} />
               {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>Date</Label>
+              <Label>תאריך</Label>
               <Input type="date" {...register("occurred_on")} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Description / Merchant</Label>
-            <Input placeholder="e.g. Coffee, Lucid, Fuel..." {...register("description")} />
+            <Label>תיאור / שם בית עסק</Label>
+            <Input placeholder="לדוגמה: קפה, Lucid, דלק..." {...register("description")} />
             {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label>Category</Label>
+            <Label>קטגוריה</Label>
             <Controller
               control={control}
               name="category_id"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choose a category" />
+                    <SelectValue placeholder="בחר קטגוריה" />
                   </SelectTrigger>
                   <SelectContent>
                     {filteredCategories.map((c) => (
@@ -172,7 +173,7 @@ export function TransactionForm({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Payment method</Label>
+            <Label>אמצעי תשלום</Label>
             <Controller
               control={control}
               name="payment_method"
@@ -194,13 +195,13 @@ export function TransactionForm({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Note (optional)</Label>
-            <Input placeholder="Short note..." {...register("note")} />
+            <Label>הערה (לא חובה)</Label>
+            <Input placeholder="הערה קצרה..." {...register("note")} />
           </div>
 
           <Button type="submit" size="lg" className="w-full gap-2" disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {editing ? "Save changes" : "Add transaction"}
+            {editing ? "שמור שינויים" : "הוסף עסקה"}
           </Button>
         </form>
       </SheetContent>

@@ -30,15 +30,15 @@ export function TransactionList({
   async function handleDelete(id: string) {
     try {
       await deleteTransaction(id);
-      toast.success("Deleted");
+      toast.success("נמחק");
       onChanged();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete");
+      toast.error(e instanceof Error ? e.message : "המחיקה נכשלה");
     }
   }
 
   if (!transactions.length) {
-    return <EmptyState icon="🔍" title="No matching transactions" />;
+    return <EmptyState icon="🔍" title="לא נמצאו עסקאות" />;
   }
 
   return (
@@ -61,7 +61,7 @@ export function TransactionList({
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium">{t.description}</div>
                 <div className="truncate text-[11px] text-muted-foreground">
-                  {formatDate(t.occurred_on)} · {t.category?.name ?? "Uncategorized"} · {t.payment_method}
+                  {formatDate(t.occurred_on)} · {t.category?.name ?? "ללא קטגוריה"} · {t.payment_method}
                 </div>
               </div>
             </div>

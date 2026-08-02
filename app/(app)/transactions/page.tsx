@@ -52,11 +52,11 @@ export default function TransactionsPage() {
   return (
     <div>
       <PageHeader
-        title="Transactions"
-        subtitle={allTime ? "All time" : monthLabel(month)}
+        title="עסקאות"
+        subtitle={allTime ? "כל הזמנים" : monthLabel(month)}
         action={
           <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2">
-            <Plus className="h-4 w-4" /> Add
+            <Plus className="h-4 w-4" /> הוספה
           </Button>
         }
       />
@@ -65,7 +65,7 @@ export default function TransactionsPage() {
         <div className="relative">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by merchant or note..."
+            placeholder="חיפוש לפי בית עסק או הערה..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pr-9"
@@ -75,19 +75,19 @@ export default function TransactionsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Tabs value={type} onValueChange={(v) => setType(v as TxType | "all")}>
             <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="expense">Expense</TabsTrigger>
-              <TabsTrigger value="income">Income</TabsTrigger>
-              <TabsTrigger value="savings">Savings</TabsTrigger>
+              <TabsTrigger value="all">הכל</TabsTrigger>
+              <TabsTrigger value="expense">הוצאה</TabsTrigger>
+              <TabsTrigger value="income">הכנסה</TabsTrigger>
+              <TabsTrigger value="savings">חיסכון</TabsTrigger>
             </TabsList>
           </Tabs>
 
           <Select value={categoryId} onValueChange={setCategoryId}>
             <SelectTrigger className="h-9 w-[170px] text-xs">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder="קטגוריה" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
+              <SelectItem value="all">כל הקטגוריות</SelectItem>
               {categories.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.icon} {c.name}
@@ -97,7 +97,7 @@ export default function TransactionsPage() {
           </Select>
 
           <Button variant={allTime ? "default" : "outline"} size="sm" onClick={() => setAllTime((v) => !v)}>
-            {allTime ? "All time" : "This month"}
+            {allTime ? "כל הזמנים" : "החודש"}
           </Button>
         </div>
       </div>
