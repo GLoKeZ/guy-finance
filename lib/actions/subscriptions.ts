@@ -22,11 +22,17 @@ export interface SubscriptionInput {
   essential_level: EssentialLevel;
   note?: string | null;
   active?: boolean;
+  auto_charge_enabled?: boolean;
 }
 
 export async function createSubscription(input: SubscriptionInput) {
   const { supabase, user } = await requireUser();
-  const { error } = await supabase.from("subscriptions").insert({ ...input, user_id: user.id, active: input.active ?? true });
+  const { error } = await supabase.from("subscriptions").insert({
+    ...input,
+    user_id: user.id,
+    active: input.active ?? true,
+    auto_charge_enabled: input.auto_charge_enabled ?? true,
+  });
   if (error) throw error;
   revalidatePath("/subscriptions");
   revalidatePath("/dashboard");

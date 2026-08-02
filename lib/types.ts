@@ -46,6 +46,9 @@ export interface Transaction {
   occurred_on: string;
   is_recurring: boolean;
   recurring_payment_id: string | null;
+  subscription_id: string | null;
+  billing_year: number | null;
+  billing_month: number | null;
   note: string | null;
   receipt_url: string | null;
   created_at: string;
@@ -61,6 +64,7 @@ export interface Subscription {
   amount: number;
   billing_day: number;
   active: boolean;
+  auto_charge_enabled: boolean;
   essential_level: EssentialLevel;
   note: string | null;
   created_at: string;
