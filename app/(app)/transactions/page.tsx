@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Plus, Search } from "lucide-react";
 import { useMonth } from "@/lib/month-context";
+import { useRealtimeSync } from "@/lib/use-realtime-sync";
 import { getCategories } from "@/lib/actions/categories";
 import { getTransactions } from "@/lib/actions/transactions";
 import type { Category, Transaction, TxType } from "@/lib/types";
@@ -48,6 +49,8 @@ export default function TransactionsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync("transactions", load);
 
   return (
     <div>

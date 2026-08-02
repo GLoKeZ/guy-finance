@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMonth } from "@/lib/month-context";
+import { useRealtimeSync } from "@/lib/use-realtime-sync";
 import { getTransactions } from "@/lib/actions/transactions";
 import { getBudgets } from "@/lib/actions/budgets";
 import { getGoals } from "@/lib/actions/goals";
@@ -52,6 +53,11 @@ export default function DashboardPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRealtimeSync("transactions", load);
+  useRealtimeSync("budgets", load);
+  useRealtimeSync("goals", load);
+  useRealtimeSync("investments", load);
 
   if (loading || !profile) return <DashboardSkeleton />;
 
