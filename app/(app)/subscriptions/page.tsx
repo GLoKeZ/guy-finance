@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Trash2, Pencil, Loader2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
@@ -9,8 +9,15 @@ import { z } from "zod";
 import { getSubscriptions, createSubscription, updateSubscription, deleteSubscription } from "@/lib/actions/subscriptions";
 import { useRealtimeSync } from "@/lib/use-realtime-sync";
 import { getCategories } from "@/lib/actions/categories";
+import {
+  getDueSubscriptionCharges,
+  generateSubscriptionCharges,
+  getActualSubscriptionCharges,
+  type DueCharge,
+} from "@/lib/actions/subscription-billing";
+import { useMonth } from "@/lib/month-context";
 import type { Subscription, Category, EssentialLevel } from "@/lib/types";
-import { formatMoney } from "@/lib/utils";
+import { formatMoney, formatDate, monthLabel } from "@/lib/utils";
 import { sumBy } from "@/lib/finance-calc";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +36,7 @@ const schema = z.object({
   amount: z.coerce.number().positive("יש להזין סכום תקין"),
   billing_day: z.coerce.number().min(1).max(31),
   essential_level: z.enum(["essential", "non_essential", "review"]),
+  auto_charge_enabled: z.boolean(),
   note: z.string().optional(),
 });
 type FormValues = z.infer<typeof schema>;
@@ -36,29 +44,47 @@ type FormValues = z.infer<typeof schema>;
 const LEVEL_LABEL: Record<string, string> = { essential: "חיוני", non_essential: "לא חיוני", review: "לבדיקה" };
 
 export default function SubscriptionsPage() {
+  const { month } = useMonth();
   const [subs, setSubs] = useState<Subscription[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [actualCharges, setActualCharges] = useState<Awaited<ReturnType<typeof getActualSubscriptionCharges>>>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subscription | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewCharges, setPreviewCharges] = useState<DueCharge[]>([]);
+  const [checkingDue, setCheckingDue] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [s, c] = await Promise.all([getSubscriptions(), getCategories()]);
+    const [s, c, actual] = await Promise.all([
+      getSubscriptions(),
+      getCategories(),
+      getActualSubscriptionCharges(month),
+    ]);
     setSubs(s);
     setCategories(c);
+    setActualCharges(actual);
     setLoading(false);
-  }, []);
+  }, [month]);
 
   useEffect(() => { load(); }, [load]);
   useRealtimeSync("subscriptions", load);
+  useRealtimeSync("transactions", load);
 
   const active = subs.filter((s) => s.active);
   const monthlyTotal = sumBy(active, (s) => s.amount);
   const nonEssential = sumBy(active.filter((s) => s.essential_level === "non_essential"), (s) => s.amount);
+  const actualTotal = sumBy(actualCharges, (t) => Number(t.amount));
 
   async function toggleActive(s: Subscription) {
     await updateSubscription(s.id, { active: !s.active });
+    load();
+  }
+
+  async function toggleAutoCharge(s: Subscription) {
+    await updateSubscription(s.id, { auto_charge_enabled: !s.auto_charge_enabled });
     load();
   }
 
@@ -68,17 +94,52 @@ export default function SubscriptionsPage() {
     load();
   }
 
+  async function handleCheckDue() {
+    setCheckingDue(true);
+    try {
+      const due = await getDueSubscriptionCharges(month);
+      if (due.length === 0) {
+        toast.info("אין חיובים ממתינים ליצירה החודש");
+        return;
+      }
+      setPreviewCharges(due);
+      setPreviewOpen(true);
+    } finally {
+      setCheckingDue(false);
+    }
+  }
+
+  async function handleConfirmGenerate() {
+    setGenerating(true);
+    try {
+      const result = await generateSubscriptionCharges(month);
+      toast.success(`נוצרו ${result.created} עסקאות`);
+      setPreviewOpen(false);
+      load();
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   return (
     <div>
       <PageHeader
         title="מנויים"
         subtitle="כל החיוב החוזר במקום אחד"
-        action={<Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2"><Plus className="h-4 w-4" /> הוספה</Button>}
+        action={
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCheckDue} disabled={checkingDue} className="gap-2">
+              {checkingDue ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+              צור חיובים שהגיע זמנם
+            </Button>
+            <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2"><Plus className="h-4 w-4" /> הוספה</Button>
+          </div>
+        }
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">עלות חודשית פעילה</div><div className="mt-1 font-tabular text-lg font-bold text-accent">{formatMoney(monthlyTotal)}</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">עלות שנתית</div><div className="mt-1 font-tabular text-lg font-bold">{formatMoney(monthlyTotal * 12)}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">עלות מנויים צפויה</div><div className="mt-1 font-tabular text-lg font-bold text-accent">{formatMoney(monthlyTotal)}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">חיובים שנרשמו בפועל ({monthLabel(month)})</div><div className="mt-1 font-tabular text-lg font-bold text-primary">{formatMoney(actualTotal)}</div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">מנויים פעילים</div><div className="mt-1 font-tabular text-lg font-bold">{active.length}</div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">לא חיוני</div><div className="mt-1 font-tabular text-lg font-bold text-warning">{formatMoney(nonEssential)}</div></CardContent></Card>
       </div>
@@ -90,31 +151,79 @@ export default function SubscriptionsPage() {
       ) : (
         <div className="space-y-2">
           <AnimatePresence initial={false}>
-            {subs.map((s) => (
-              <motion.div key={s.id} layout initial={{ opacity: 0 }} animate={{ opacity: s.active ? 1 : 0.5 }} exit={{ opacity: 0, height: 0 }} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-base">{s.category?.icon ?? "🔁"}</div>
-                  <div>
-                    <div className="text-sm font-medium">{s.name}</div>
-                    <div className="text-[11px] text-muted-foreground">{s.category?.name} · חיוב ביום {s.billing_day}</div>
+            {subs.map((s) => {
+              const wasCharged = actualCharges.some((t) => t.subscription_id === s.id);
+              return (
+                <motion.div key={s.id} layout initial={{ opacity: 0 }} animate={{ opacity: s.active ? 1 : 0.5 }} exit={{ opacity: 0, height: 0 }} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-base">{s.category?.icon ?? "🔁"}</div>
+                    <div>
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        {s.name}
+                        {wasCharged && <Badge variant="default" className="text-[9px]">נרשם החודש</Badge>}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">{s.category?.name} · חיוב ביום {s.billing_day}</div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant={s.essential_level === "essential" ? "default" : s.essential_level === "non_essential" ? "destructive" : "warning"}>
-                    {LEVEL_LABEL[s.essential_level]}
-                  </Badge>
-                  <span className="font-tabular text-sm font-semibold">{formatMoney(s.amount)}</span>
-                  <Switch checked={s.active} onCheckedChange={() => toggleActive(s)} />
-                  <button onClick={() => { setEditing(s); setFormOpen(true); }} className="text-muted-foreground hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => handleDelete(s.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge variant={s.essential_level === "essential" ? "default" : s.essential_level === "non_essential" ? "destructive" : "warning"}>
+                      {LEVEL_LABEL[s.essential_level]}
+                    </Badge>
+                    <span className="font-tabular text-sm font-semibold">{formatMoney(s.amount)}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">רישום אוטומטי</span>
+                      <Switch checked={s.auto_charge_enabled} onCheckedChange={() => toggleAutoCharge(s)} />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">פעיל</span>
+                      <Switch checked={s.active} onCheckedChange={() => toggleActive(s)} />
+                    </div>
+                    <button onClick={() => { setEditing(s); setFormOpen(true); }} className="text-muted-foreground hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => handleDelete(s.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       )}
 
       <SubscriptionForm open={formOpen} onOpenChange={setFormOpen} categories={categories} editing={editing} onSaved={load} />
+
+      {/* Preview confirmation before generating charges */}
+      <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+        <SheetContent side="bottom" className="sm:mx-auto sm:max-w-md sm:rounded-2xl">
+          <SheetHeader><SheetTitle>אישור יצירת חיובים — {monthLabel(month)}</SheetTitle></SheetHeader>
+          <div className="mt-2 space-y-2">
+            <p className="text-sm text-muted-foreground">הפעולות הבאות ייווצרו כעסקאות הוצאה:</p>
+            <div className="max-h-64 space-y-1.5 overflow-y-auto">
+              {previewCharges.map((c) => (
+                <div key={c.subscriptionId} className="flex items-center justify-between rounded-lg border border-border p-2.5 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>{c.categoryIcon}</span>
+                    <div>
+                      <div className="font-medium">{c.name}</div>
+                      <div className="text-[11px] text-muted-foreground">{formatDate(c.occurredOn)} · {c.categoryName ?? "ללא קטגוריה"}</div>
+                    </div>
+                  </div>
+                  <span className="font-tabular font-semibold">{formatMoney(c.amount)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between border-t border-border pt-2 text-sm font-semibold">
+              <span>סהֲכ</span>
+              <span className="font-tabular">{formatMoney(sumBy(previewCharges, (c) => c.amount))}</span>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button className="flex-1 gap-2" onClick={handleConfirmGenerate} disabled={generating}>
+                {generating && <Loader2 className="h-4 w-4 animate-spin" />}
+                אישור ויצירה
+              </Button>
+              <Button variant="ghost" onClick={() => setPreviewOpen(false)}>ביטול</Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -124,8 +233,8 @@ function SubscriptionForm({ open, onOpenChange, categories, editing, onSaved }: 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     values: editing
-      ? { name: editing.name, category_id: editing.category_id ?? "", amount: editing.amount, billing_day: editing.billing_day, essential_level: editing.essential_level, note: editing.note ?? "" }
-      : { name: "", category_id: "", amount: 0, billing_day: 1, essential_level: "review" as EssentialLevel, note: "" },
+      ? { name: editing.name, category_id: editing.category_id ?? "", amount: editing.amount, billing_day: editing.billing_day, essential_level: editing.essential_level, auto_charge_enabled: editing.auto_charge_enabled, note: editing.note ?? "" }
+      : { name: "", category_id: "", amount: 0, billing_day: 1, essential_level: "review" as EssentialLevel, auto_charge_enabled: true, note: "" },
   });
 
   async function onSubmit(values: FormValues) {
@@ -175,6 +284,15 @@ function SubscriptionForm({ open, onOpenChange, categories, editing, onSaved }: 
                   <SelectItem value="review">לבדיקה</SelectItem>
                 </SelectContent>
               </Select>
+            )} />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label>רישום אוטומטי כהוצאה</Label>
+              <p className="text-[11px] text-muted-foreground">ייצור עסקת הוצאה אוטומטית ביום החיוב מדי חודש</p>
+            </div>
+            <Controller control={control} name="auto_charge_enabled" render={({ field }) => (
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
             )} />
           </div>
           <div className="space-y-1.5"><Label>הערה</Label><Input {...register("note")} /></div>

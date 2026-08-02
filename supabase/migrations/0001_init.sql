@@ -228,7 +228,7 @@ alter table public.profiles add column if not exists emergency_fund_target numer
 create table if not exists public.user_settings (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade unique,
-  week_starts_on int not null default 0, -- 0 = Sunday
+  week_starts_on int not null default 0,
   date_format text not null default 'DD/MM/YYYY',
   notifications_enabled boolean not null default true,
   created_at timestamptz not null default now(),
@@ -262,8 +262,6 @@ create table if not exists public.import_history (
 alter table public.import_history enable row level security;
 create policy "import_history_all_own" on public.import_history for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- Enable Realtime replication so a change made on one device (phone) is
--- pushed live to every other connected client (desktop) without a manual refresh.
 alter table public.transactions replica identity full;
 alter table public.budgets replica identity full;
 alter table public.subscriptions replica identity full;
@@ -296,3 +294,16 @@ begin
     alter publication supabase_realtime add table public.investments;
   end if;
 end $$;
+
+-- ---------- v4: subscription auto-billing ----------
+alter table public.subscriptions add column if not exists auto_charge_enabled boolean not null default true;
+
+alter table public.transactions add column if not exists subscription_id uuid references public.subscriptions(id) on delete set null;
+alter table public.transactions add column if not exists billing_year int;
+alter table public.transactions add column if not exists billing_month int;
+
+create unique index if not exists transactions_subscription_billing_period_uidx
+  on public.transactions(user_id, subscription_id, billing_year, billing_month)
+  where subscription_id is not null;
+
+create index if not exists transactions_subscription_id_idx on public.transactions(subscription_id) where subscription_id is not null;
