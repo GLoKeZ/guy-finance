@@ -6,6 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getInvestments, createInvestment, updateInvestment, deleteInvestment } from "@/lib/actions/investments";
+import { useRealtimeSync } from "@/lib/use-realtime-sync";
 import type { Investment, InvestmentKind } from "@/lib/types";
 import { formatDate, formatMoney, formatPercent } from "@/lib/utils";
 import { sumBy } from "@/lib/finance-calc";
@@ -46,6 +47,7 @@ export default function InvestmentsPage() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeSync("investments", load);
 
   const invested = sumBy(items, (i) => i.amount_invested);
   const currentValue = sumBy(items, (i) => i.current_value);
@@ -67,7 +69,7 @@ export default function InvestmentsPage() {
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="סהיֲכ הושקע" value={formatMoney(invested)} />
+        <StatCard label="סהֲכ הושקע" value={formatMoney(invested)} />
         <StatCard label="שווי נוכחי" value={formatMoney(currentValue)} tone="primary" />
         <StatCard label="רווח / הפסד" value={formatMoney(gain)} tone={gain >= 0 ? "primary" : "destructive"} />
         <StatCard label="תשואה" value={formatPercent(gainPct)} tone={gainPct >= 0 ? "primary" : "destructive"} />

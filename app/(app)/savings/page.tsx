@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getGoals, createGoal, updateGoal, deleteGoal } from "@/lib/actions/goals";
+import { useRealtimeSync } from "@/lib/use-realtime-sync";
 import type { Goal } from "@/lib/types";
 import { formatMoney, formatPercent } from "@/lib/utils";
 import { PageHeader, EmptyState } from "@/components/page-header";
@@ -39,6 +40,7 @@ export default function SavingsPage() {
     setLoading(false);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRealtimeSync("goals", load);
 
   async function handleDelete(id: string) {
     await deleteGoal(id);
