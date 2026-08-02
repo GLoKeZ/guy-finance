@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Mail, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -57,7 +58,10 @@ export default function LoginPage() {
               <Input id="email" type="email" required placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" className="text-left" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">סיסמה</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">סיסמה</Label>
+                <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">שכחת סיסמה?</Link>
+              </div>
               <Input id="password" type="password" required minLength={6} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} dir="ltr" />
             </div>
             <Button type="submit" size="lg" className="w-full gap-2" disabled={loading}>
