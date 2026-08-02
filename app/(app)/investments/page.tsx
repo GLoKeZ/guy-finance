@@ -64,7 +64,7 @@ export default function InvestmentsPage() {
     <div>
       <PageHeader
         title="השקעות"
-        subtitle="מניות, קריפטו, נדל\"ן ועוד"
+        subtitle={'מניות, קריפטו, נדל"ן ועוד'}
         action={<Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2"><Plus className="h-4 w-4" /> הוספה</Button>}
       />
 
