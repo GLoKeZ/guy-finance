@@ -5,17 +5,17 @@ import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const rubik = Rubik({ subsets: ["latin"], variable: "--font-rubik", display: "swap" });
+const rubik = Rubik({ subsets: ["latin", "hebrew"], variable: "--font-rubik", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Guy Finance",
-  description: "Personal finance system — income, expenses, trading, savings, goals.",
+  title: "המערכת הפיננסית שלי",
+  description: "המערכת הפיננסית האישית שלי — הכנסות, הוצאות, מסחר, חיסכון והשקעות.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Guy Finance",
+    title: "המערכת הפיננסית שלי",
   },
   icons: {
     icon: "/icons/icon-192.png",
@@ -36,7 +36,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="he" dir="rtl" suppressHydrationWarning>
       <body className={`${rubik.variable} ${mono.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}

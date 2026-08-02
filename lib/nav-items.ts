@@ -8,6 +8,7 @@ import {
   TrendingUp,
   BarChart3,
   Settings,
+  Sparkles,
 } from "lucide-react";
 
 export interface NavItem {
@@ -17,12 +18,13 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/transactions", label: "Transactions", icon: Receipt },
-  { href: "/subscriptions", label: "Subscriptions", icon: RefreshCw },
-  { href: "/trading", label: "Trading", icon: LineChart },
-  { href: "/savings", label: "Savings", icon: PiggyBank },
-  { href: "/investments", label: "Investments", icon: TrendingUp },
-  { href: "/reports", label: "Reports", icon: BarChart3 },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard", label: "בית", icon: LayoutDashboard },
+  { href: "/transactions", label: "עסקאות", icon: Receipt },
+  { href: "/subscriptions", label: "מנויים", icon: RefreshCw },
+  { href: "/trading", label: "מסחר", icon: LineChart },
+  { href: "/savings", label: "חיסכון", icon: PiggyBank },
+  { href: "/investments", label: "השקעות", icon: TrendingUp },
+  { href: "/insights", label: "תובנות AI", icon: Sparkles },
+  { href: "/reports", label: "דוחות", icon: BarChart3 },
+  { href: "/settings", label: "הגדרות", icon: Settings },
 ];

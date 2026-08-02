@@ -14,6 +14,9 @@ export interface Profile {
   monthly_salary: number;
   salary_day: number;
   monthly_savings_target: number;
+  investment_target: number;
+  max_spending: number;
+  emergency_fund_target: number;
   theme: string;
   created_at: string;
   updated_at: string;
@@ -155,19 +158,19 @@ export interface Budget {
 }
 
 export const DEFAULT_CATEGORIES: Array<{ name: string; icon: string; color: string; kind: CategoryKind }> = [
-  { name: "Food & Coffee", icon: "☕", color: "#F2B84B", kind: "expense" },
-  { name: "Dating & Social", icon: "💞", color: "#F2555A", kind: "expense" },
-  { name: "Nightlife & Bars", icon: "🍻", color: "#8F7CF0", kind: "expense" },
-  { name: "Trading - Accounts", icon: "📊", color: "#4C8DFF", kind: "trading" },
-  { name: "Trading - Tools", icon: "🖥️", color: "#39C7C7", kind: "trading" },
-  { name: "Transport & Fuel", icon: "⛽", color: "#E2856E", kind: "expense" },
-  { name: "Health & Grooming", icon: "💊", color: "#6FCF97", kind: "expense" },
-  { name: "Shopping", icon: "🛍️", color: "#C97BE0", kind: "expense" },
-  { name: "Digital Subscriptions", icon: "📱", color: "#5AA9E6", kind: "expense" },
-  { name: "Gifts", icon: "🎁", color: "#F29E4C", kind: "expense" },
-  { name: "Travel", icon: "✈️", color: "#8CE99A", kind: "expense" },
-  { name: "Savings", icon: "💰", color: "#3ECF8E", kind: "savings" },
-  { name: "Emergency Fund", icon: "🛟", color: "#B197FC", kind: "savings" },
-  { name: "Income", icon: "💵", color: "#3ECF8E", kind: "income" },
-  { name: "Other", icon: "📎", color: "#66D9E8", kind: "expense" },
+  { name: "אוכל", icon: "🍔", color: "#F2B84B", kind: "expense" },
+  { name: "קפה", icon: "☕", color: "#E2856E", kind: "expense" },
+  { name: "בילויים", icon: "🍻", color: "#8F7CF0", kind: "expense" },
+  { name: "רכב", icon: "🚗", color: "#6FCF97", kind: "expense" },
+  { name: "דלק", icon: "⛽", color: "#F29E4C", kind: "expense" },
+  { name: "מנויים", icon: "📱", color: "#5AA9E6", kind: "expense" },
+  { name: "בריאות", icon: "💊", color: "#66D9E8", kind: "expense" },
+  { name: "קניות", icon: "🛍️", color: "#C97BE0", kind: "expense" },
+  { name: "מסחר - חשבונות", icon: "📊", color: "#4C8DFF", kind: "trading" },
+  { name: "מסחר - כלים", icon: "🖥️", color: "#39C7C7", kind: "trading" },
+  { name: "השקעות", icon: "📈", color: "#3ECF8E", kind: "savings" },
+  { name: "חיסכון", icon: "💰", color: "#3ECF8E", kind: "savings" },
+  { name: "קרן חירום", icon: "🛟", color: "#B197FC", kind: "savings" },
+  { name: "הכנסה", icon: "💵", color: "#3ECF8E", kind: "income" },
+  { name: "אחר", icon: "📎", color: "#8CE99A", kind: "expense" },
 ];

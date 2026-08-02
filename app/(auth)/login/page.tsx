@@ -29,7 +29,7 @@ export default function LoginPage() {
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) toast.error(error.message);
-      else toast.success("Check your email to confirm your account.");
+      else toast.success("נשלח מייל אימות — יש לאשר כדי להתחבר.");
     }
     setLoading(false);
   }
@@ -46,23 +46,23 @@ export default function LoginPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-2xl font-bold text-background shadow-lg">
             <Wallet className="h-6 w-6" />
           </div>
-          <h1 className="text-xl font-bold">Guy Finance</h1>
-          <p className="text-sm text-muted-foreground">Your personal finance system</p>
+          <h1 className="text-xl font-bold">המערכת הפיננסית שלי</h1>
+          <p className="text-sm text-muted-foreground">המערכת האישית שלך לניהול כסף</p>
         </div>
 
         <div className="space-y-3">
           <form onSubmit={handleEmail} className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Label htmlFor="email">אימייל</Label>
+              <Input id="email" type="email" required placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" className="text-left" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required minLength={6} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Label htmlFor="password">סיסמה</Label>
+              <Input id="password" type="password" required minLength={6} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} dir="ltr" />
             </div>
             <Button type="submit" size="lg" className="w-full gap-2" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-              {mode === "signin" ? "Sign in" : "Create account"}
+              {mode === "signin" ? "התחברות" : "יצירת חשבון"}
             </Button>
           </form>
 
@@ -76,7 +76,7 @@ export default function LoginPage() {
               onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
               className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
             >
-              {mode === "signin" ? "New here? Create an account" : "Already have an account? Sign in"}
+              {mode === "signin" ? "חדש כאן? צור חשבון" : "כבר יש לך חשבון? התחבר"}
             </motion.button>
           </AnimatePresence>
         </div>

@@ -15,8 +15,8 @@ export function Sidebar() {
           <Wallet className="h-5 w-5" />
         </div>
         <div>
-          <div className="text-sm font-bold leading-tight">Guy Finance</div>
-          <div className="text-[10.5px] text-muted-foreground">Personal system</div>
+          <div className="text-sm font-bold leading-tight">המערכת הפיננסית שלי</div>
+          <div className="text-[10.5px] text-muted-foreground">המערכת האישית שלך</div>
         </div>
       </div>
 
