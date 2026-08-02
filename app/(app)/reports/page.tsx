@@ -89,32 +89,32 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <PageHeader title="Reports" subtitle={`Deep-dive analytics — ${monthLabel(month)}`} />
+      <PageHeader title="דוחות" subtitle={`ניתוח מעמיק — ${monthLabel(month)}`} />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Average daily spend" value={formatMoney(avgDaily, currency)} />
-        <StatCard label="Average weekly spend" value={formatMoney(avgWeekly, currency)} />
-        <StatCard label="Priciest day" value={priciestDay ? formatMoney((priciestDay as { date: string; amount: number }).amount, currency) : "—"} tone="destructive" foot={priciestDay ? formatDate((priciestDay as { date: string; amount: number }).date) : undefined} />
-        <StatCard label="Priciest week" value={priciestWeek ? formatMoney((priciestWeek as { week: number; amount: number }).amount, currency) : "—"} tone="destructive" foot={priciestWeek ? `Week ${(priciestWeek as { week: number; amount: number }).week}` : undefined} />
+        <StatCard label="ממוצע הוצאה יומי" value={formatMoney(avgDaily, currency)} />
+        <StatCard label="ממוצע הוצאה שבועי" value={formatMoney(avgWeekly, currency)} />
+        <StatCard label="היום היקר ביותר" value={priciestDay ? formatMoney((priciestDay as { date: string; amount: number }).amount, currency) : "—"} tone="destructive" foot={priciestDay ? formatDate((priciestDay as { date: string; amount: number }).date) : undefined} />
+        <StatCard label="השבוע היקר ביותר" value={priciestWeek ? formatMoney((priciestWeek as { week: number; amount: number }).amount, currency) : "—"} tone="destructive" foot={priciestWeek ? `שבוע ${(priciestWeek as { week: number; amount: number }).week}` : undefined} />
       </div>
 
       <Card className="mb-5">
         <CardContent className="p-4">
-          <div className="text-xs text-muted-foreground">vs. previous month ({monthLabel(prevMk)})</div>
+          <div className="text-xs text-muted-foreground">לעומת החודש הקודם ({monthLabel(prevMk)})</div>
           <div className="mt-1 flex items-baseline gap-2">
             <span className={`font-tabular text-xl font-bold ${diff > 0 ? "text-destructive" : "text-primary"}`}>
               {diff > 0 ? "+" : ""}{formatMoney(diff, currency)}
             </span>
-            <span className="text-xs text-muted-foreground">{diff > 0 ? "more" : "less"} than last month ({diff > 0 ? "+" : ""}{formatPercent(diffPct)})</span>
+            <span className="text-xs text-muted-foreground">{diff > 0 ? "יותר" : "פחות"} מהחודש הקודם ({diff > 0 ? "+" : ""}{formatPercent(diffPct)})</span>
           </div>
         </CardContent>
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Top 10 merchants</CardTitle></CardHeader>
+          <CardHeader><CardTitle>10 בתי העסק המובילים</CardTitle></CardHeader>
           <CardContent>
-            {topMerchants.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No expenses yet</p> : (
+            {topMerchants.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">אין הוצאות עדיין</p> : (
               <table className="w-full text-sm">
                 <tbody>
                   {topMerchants.map(([name, total], i) => (
@@ -130,9 +130,9 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Top 10 categories</CardTitle></CardHeader>
+          <CardHeader><CardTitle>10 הקטגוריות המובילות</CardTitle></CardHeader>
           <CardContent>
-            {topCategories.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No expenses yet</p> : (
+            {topCategories.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">אין הוצאות עדיין</p> : (
               <table className="w-full text-sm">
                 <tbody>
                   {topCategories.map((c, i) => (

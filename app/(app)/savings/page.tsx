@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const schema = z.object({
@@ -43,22 +42,22 @@ export default function SavingsPage() {
 
   async function handleDelete(id: string) {
     await deleteGoal(id);
-    toast.success("Deleted");
+    toast.success("נמחק");
     load();
   }
 
   return (
     <div>
       <PageHeader
-        title="Savings Goals"
-        subtitle="Track progress toward what matters"
-        action={<Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2"><Plus className="h-4 w-4" /> New goal</Button>}
+        title="יעדי חיסכון"
+        subtitle="עקוב אחרי ההתקדמות למה שחשוב לך"
+        action={<Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2"><Plus className="h-4 w-4" /> יעד חדש</Button>}
       />
 
       {loading ? (
         <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>
       ) : goals.length === 0 ? (
-        <EmptyState icon="🏁" title="No goals yet — create your first one" />
+        <EmptyState icon="🏁" title="אין יעדים עדיין — צור את הראשון" />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {goals.map((g, i) => {
@@ -69,7 +68,7 @@ export default function SavingsPage() {
             if (monthsLeft !== null && remaining > 0) {
               const d = new Date();
               d.setMonth(d.getMonth() + monthsLeft);
-              eta = d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+              eta = d.toLocaleDateString("he-IL", { month: "short", year: "numeric" });
             }
             return (
               <motion.div key={g.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
@@ -85,10 +84,10 @@ export default function SavingsPage() {
                     <div className="mb-2 font-tabular text-sm text-muted-foreground">{formatMoney(g.current_amount)} / {formatMoney(g.target_amount)}</div>
                     <Progress value={pct} />
                     <div className="mt-2 text-[11px] text-muted-foreground">
-                      {formatPercent(pct)} complete
-                      {monthsLeft !== null && remaining > 0 && ` · ${monthsLeft} months left at ${formatMoney(g.monthly_contribution)}/mo`}
-                      {eta && ` · target: ${eta}`}
-                      {remaining <= 0 && " · 🎉 Completed!"}
+                      {formatPercent(pct)} הושלם
+                      {monthsLeft !== null && remaining > 0 && ` · עוד ${monthsLeft} חודשים בקצב ${formatMoney(g.monthly_contribution)}/חודש`}
+                      {eta && ` · יעד: ${eta}`}
+                      {remaining <= 0 && " · 🎉 הושלם!"}
                     </div>
                   </CardContent>
                 </Card>
@@ -117,12 +116,12 @@ function GoalForm({ open, onOpenChange, editing, onSaved }: { open: boolean; onO
     try {
       if (editing) await updateGoal(editing.id, values);
       else await createGoal(values);
-      toast.success("Saved");
+      toast.success("נשמר");
       reset();
       onSaved();
       onOpenChange(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed");
+      toast.error(e instanceof Error ? e.message : "נכשל");
     } finally {
       setSaving(false);
     }
@@ -131,18 +130,18 @@ function GoalForm({ open, onOpenChange, editing, onSaved }: { open: boolean; onO
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="sm:mx-auto sm:max-w-md sm:rounded-2xl">
-        <SheetHeader><SheetTitle>{editing ? "Edit goal" : "New goal"}</SheetTitle></SheetHeader>
+        <SheetHeader><SheetTitle>{editing ? "עריכת יעד" : "יעד חדש"}</SheetTitle></SheetHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-4">
           <div className="grid grid-cols-[1fr_4fr] gap-3">
-            <div className="space-y-1.5"><Label>Icon</Label><Input {...register("icon")} /></div>
-            <div className="space-y-1.5"><Label>Name</Label><Input {...register("name")} placeholder="Emergency Fund" />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
+            <div className="space-y-1.5"><Label>אייקון</Label><Input {...register("icon")} /></div>
+            <div className="space-y-1.5"><Label>שם</Label><Input {...register("name")} placeholder="קרן חירום" />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Target amount</Label><Input type="number" step="0.01" {...register("target_amount")} /></div>
-            <div className="space-y-1.5"><Label>Current amount</Label><Input type="number" step="0.01" {...register("current_amount")} /></div>
+            <div className="space-y-1.5"><Label>סכום יעד</Label><Input type="number" step="0.01" {...register("target_amount")} /></div>
+            <div className="space-y-1.5"><Label>סכום נוכחי</Label><Input type="number" step="0.01" {...register("current_amount")} /></div>
           </div>
-          <div className="space-y-1.5"><Label>Monthly contribution</Label><Input type="number" step="0.01" {...register("monthly_contribution")} /></div>
-          <Button type="submit" size="lg" className="w-full gap-2" disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />}Save</Button>
+          <div className="space-y-1.5"><Label>הפקדה חודשית</Label><Input type="number" step="0.01" {...register("monthly_contribution")} /></div>
+          <Button type="submit" size="lg" className="w-full gap-2" disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />}שמור</Button>
         </form>
       </SheetContent>
     </Sheet>

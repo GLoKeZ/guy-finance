@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,7 +19,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
 
 const schema = z.object({
   name: z.string().min(1),
@@ -32,7 +31,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const KIND_LABEL: Record<InvestmentKind, string> = {
-  stocks: "Stocks", crypto: "Crypto", real_estate: "Real Estate", fund: "Fund", other: "Other",
+  stocks: "מניות", crypto: "קריפטו", real_estate: "נדל\"ן", fund: "קרן", other: "אחר",
 };
 
 export default function InvestmentsPage() {
@@ -55,29 +54,29 @@ export default function InvestmentsPage() {
 
   async function handleDelete(id: string) {
     await deleteInvestment(id);
-    toast.success("Deleted");
+    toast.success("נמחק");
     load();
   }
 
   return (
     <div>
       <PageHeader
-        title="Investments"
-        subtitle="Stocks, crypto, real estate, and more"
-        action={<Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2"><Plus className="h-4 w-4" /> Add</Button>}
+        title="השקעות"
+        subtitle="מניות, קריפטו, נדל\"ן ועוד"
+        action={<Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gap-2"><Plus className="h-4 w-4" /> הוספה</Button>}
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Total invested" value={formatMoney(invested)} />
-        <StatCard label="Current value" value={formatMoney(currentValue)} tone="primary" />
-        <StatCard label="Gain / Loss" value={formatMoney(gain)} tone={gain >= 0 ? "primary" : "destructive"} />
-        <StatCard label="Return" value={formatPercent(gainPct)} tone={gainPct >= 0 ? "primary" : "destructive"} />
+        <StatCard label="סהיֲכ הושקע" value={formatMoney(invested)} />
+        <StatCard label="שווי נוכחי" value={formatMoney(currentValue)} tone="primary" />
+        <StatCard label="רווח / הפסד" value={formatMoney(gain)} tone={gain >= 0 ? "primary" : "destructive"} />
+        <StatCard label="תשואה" value={formatPercent(gainPct)} tone={gainPct >= 0 ? "primary" : "destructive"} />
       </div>
 
       {loading ? (
         <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
       ) : items.length === 0 ? (
-        <EmptyState icon="📈" title="No investments tracked yet" />
+        <EmptyState icon="📈" title="אין השקעות רשומות עדיין" />
       ) : (
         <div className="space-y-2">
           {items.map((inv) => {
@@ -87,7 +86,7 @@ export default function InvestmentsPage() {
                 <CardContent className="flex items-center justify-between p-3.5">
                   <div>
                     <div className="flex items-center gap-2 text-sm font-medium">{inv.name} <Badge variant="secondary">{KIND_LABEL[inv.kind]}</Badge></div>
-                    <div className="text-[11px] text-muted-foreground">Since {formatDate(inv.purchase_date)} · Invested {formatMoney(inv.amount_invested)}</div>
+                    <div className="text-[11px] text-muted-foreground">מאז {formatDate(inv.purchase_date)} · הושקעו {formatMoney(inv.amount_invested)}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
@@ -123,12 +122,12 @@ function InvestmentForm({ open, onOpenChange, editing, onSaved }: { open: boolea
     try {
       if (editing) await updateInvestment(editing.id, values);
       else await createInvestment(values);
-      toast.success("Saved");
+      toast.success("נשמר");
       reset();
       onSaved();
       onOpenChange(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed");
+      toast.error(e instanceof Error ? e.message : "נכשל");
     } finally {
       setSaving(false);
     }
@@ -137,11 +136,11 @@ function InvestmentForm({ open, onOpenChange, editing, onSaved }: { open: boolea
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="sm:mx-auto sm:max-w-md sm:rounded-2xl">
-        <SheetHeader><SheetTitle>{editing ? "Edit investment" : "Add investment"}</SheetTitle></SheetHeader>
+        <SheetHeader><SheetTitle>{editing ? "עריכת השקעה" : "הוספת השקעה"}</SheetTitle></SheetHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-4">
-          <div className="space-y-1.5"><Label>Name</Label><Input {...register("name")} placeholder="S&P 500 ETF, Bitcoin..." />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
+          <div className="space-y-1.5"><Label>שם</Label><Input {...register("name")} placeholder="S&P 500, ביטקוין..." />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
           <div className="space-y-1.5">
-            <Label>Type</Label>
+            <Label>סוג</Label>
             <Controller control={control} name="kind" render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -150,12 +149,12 @@ function InvestmentForm({ open, onOpenChange, editing, onSaved }: { open: boolea
             )} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Amount invested</Label><Input type="number" step="0.01" {...register("amount_invested")} /></div>
-            <div className="space-y-1.5"><Label>Current value</Label><Input type="number" step="0.01" {...register("current_value")} /></div>
+            <div className="space-y-1.5"><Label>סכום שהושקע</Label><Input type="number" step="0.01" {...register("amount_invested")} /></div>
+            <div className="space-y-1.5"><Label>שווי נוכחי</Label><Input type="number" step="0.01" {...register("current_value")} /></div>
           </div>
-          <div className="space-y-1.5"><Label>Purchase date</Label><Input type="date" {...register("purchase_date")} /></div>
-          <div className="space-y-1.5"><Label>Note</Label><Input {...register("note")} /></div>
-          <Button type="submit" size="lg" className="w-full gap-2" disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />}Save</Button>
+          <div className="space-y-1.5"><Label>תאריך רכישה</Label><Input type="date" {...register("purchase_date")} /></div>
+          <div className="space-y-1.5"><Label>הערה</Label><Input {...register("note")} /></div>
+          <Button type="submit" size="lg" className="w-full gap-2" disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin" />}שמור</Button>
         </form>
       </SheetContent>
     </Sheet>
