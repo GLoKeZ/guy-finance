@@ -425,7 +425,9 @@ function RecurringForm({ categories, onAdded }: { categories: Category[]; onAdde
         <Select value={frequency} onValueChange={(v) => setFrequency(v as typeof frequency)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="ILS">שקל (₪)</SelectItem>
+            <SelectItem value="weekly">שבועי</SelectItem>
+            <SelectItem value="monthly">חודשי</SelectItem>
+            <SelectItem value="yearly">שנתי</SelectItem>
           </SelectContent>
         </Select>
       </div>
