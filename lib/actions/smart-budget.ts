@@ -2,13 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "./helpers";
 import { getOrCreateProfile } from "./profile";
-
-export const SAVINGS_NAME = "חיסכון";
-export const EMERGENCY_NAME = "קרן חירום";
-export const RESERVE_NAME = "רזרבה חודשית";
-export const FREE_MONEY_NAME = "כסף פנוי";
-const RESERVE_ICON = "🧯";
-const FREE_MONEY_ICON = "💵";
+import { SAVINGS_NAME, EMERGENCY_NAME, RESERVE_NAME, FREE_MONEY_NAME, RESERVE_ICON, FREE_MONEY_ICON } from "@/lib/smart-budget-constants";
 
 const ESSENTIAL_KEYWORDS = ["אוכל", "דלק", "בריאות"];
 // Priority order when cutting a budget shortfall. Trading accounts are handled
