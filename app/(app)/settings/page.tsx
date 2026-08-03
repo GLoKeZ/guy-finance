@@ -13,10 +13,10 @@ import {
   applySalaryReallocation,
   getFreeMoneyStatus,
   transferFreeMoneyToSavings,
-  FREE_MONEY_NAME,
   type ReallocationPlan,
   type FreeMoneyStatus,
 } from "@/lib/actions/smart-budget";
+import { FREE_MONEY_NAME } from "@/lib/smart-budget-constants";
 import { useRealtimeSync } from "@/lib/use-realtime-sync";
 import { useMonth } from "@/lib/month-context";
 import { getTransactions } from "@/lib/actions/transactions";
@@ -425,9 +425,7 @@ function RecurringForm({ categories, onAdded }: { categories: Category[]; onAdde
         <Select value={frequency} onValueChange={(v) => setFrequency(v as typeof frequency)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="weekly">שבועי</SelectItem>
-            <SelectItem value="monthly">חודשי</SelectItem>
-            <SelectItem value="yearly">שנתי</SelectItem>
+            <SelectItem value="ILS">שקל (₪)</SelectItem>
           </SelectContent>
         </Select>
       </div>
