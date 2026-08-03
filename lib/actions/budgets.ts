@@ -19,3 +19,13 @@ export async function setBudget(categoryId: string, monthlyAmount: number) {
   revalidatePath("/dashboard");
   revalidatePath("/settings");
 }
+
+export async function setBudgetLock(categoryId: string, locked: boolean) {
+  const { supabase, user } = await requireUser();
+  const { error } = await supabase
+    .from("budgets")
+    .upsert({ user_id: user.id, category_id: categoryId, locked }, { onConflict: "user_id,category_id" });
+  if (error) throw error;
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+}

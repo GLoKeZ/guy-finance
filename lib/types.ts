@@ -158,6 +158,7 @@ export interface Budget {
   user_id: string;
   category_id: string;
   monthly_amount: number;
+  locked: boolean;
   created_at: string;
 }
 
@@ -175,6 +176,8 @@ export const DEFAULT_CATEGORIES: Array<{ name: string; icon: string; color: stri
   { name: "השקעות", icon: "📈", color: "#3ECF8E", kind: "savings" },
   { name: "חיסכון", icon: "💰", color: "#3ECF8E", kind: "savings" },
   { name: "קרן חירום", icon: "🛟", color: "#B197FC", kind: "savings" },
+  { name: "רזרבה חודשית", icon: "🧯", color: "#F2A65A", kind: "savings" },
+  { name: "כסף פנוי", icon: "💵", color: "#5AA9E6", kind: "expense" },
   { name: "הכנסה", icon: "💵", color: "#3ECF8E", kind: "income" },
   { name: "אחר", icon: "📎", color: "#8CE99A", kind: "expense" },
 ];
